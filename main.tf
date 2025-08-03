@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 terraform {
-  required_version = ">= 1.12.0"    
+  required_version = ">= 1.12.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -17,11 +17,11 @@ locals {
 }
 
 resource "aws_vpc" "eks_vpc" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
-    Name = "simple-golang-api-vpc"
+    Name                                          = "simple-golang-api-vpc"
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
   }
 }
@@ -30,7 +30,7 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.eks_vpc.id
   tags = {
     Name = "simple-golang-api-igw"
-  }  
+  }
 }
 
 resource "aws_nat_gateway" "natgw" {
@@ -39,7 +39,7 @@ resource "aws_nat_gateway" "natgw" {
   depends_on    = [aws_internet_gateway.igw]
   tags = {
     Name = "simple-golang-api-natgw"
-  }  
+  }
 }
 
 resource "aws_eip" "natgw" {
@@ -49,30 +49,30 @@ resource "aws_eip" "natgw" {
 }
 
 resource "aws_subnet" "public" {
-  count             = 2
-  vpc_id            = aws_vpc.eks_vpc.id
-  cidr_block        = cidrsubnet(aws_vpc.eks_vpc.cidr_block, 4, count.index)
-  availability_zone = element(var.availability_zones, count.index)
+  count                   = 2
+  vpc_id                  = aws_vpc.eks_vpc.id
+  cidr_block              = cidrsubnet(aws_vpc.eks_vpc.cidr_block, 4, count.index)
+  availability_zone       = element(var.availability_zones, count.index)
   map_public_ip_on_launch = true
   tags = {
-    Name = "simple-golang-api-subnet-public-${count.index}"
+    Name                     = "simple-golang-api-subnet-public-${count.index}"
     "kubernetes.io/role/elb" = "1"
-    "mapPublicIpOnLaunch" = "TRUE"
+    "mapPublicIpOnLaunch"    = "TRUE"
   }
 }
 
 resource "aws_subnet" "private" {
-  count             = 2
-  vpc_id            = aws_vpc.eks_vpc.id
-  cidr_block        = cidrsubnet(aws_vpc.eks_vpc.cidr_block, 4, count.index + 2)
-  availability_zone = element(var.availability_zones, count.index)
+  count                   = 2
+  vpc_id                  = aws_vpc.eks_vpc.id
+  cidr_block              = cidrsubnet(aws_vpc.eks_vpc.cidr_block, 4, count.index + 2)
+  availability_zone       = element(var.availability_zones, count.index)
   map_public_ip_on_launch = false
   tags = {
-    Name = "simple-golang-api-subnet-private-${count.index}"
+    Name                              = "simple-golang-api-subnet-private-${count.index}"
     "kubernetes.io/role/internal-elb" = "1",
     "mapPublicIpOnLaunch"             = "FALSE"
     "karpenter.sh/discovery"          = local.cluster_name
-    "kubernetes.io/role/cni"          = "1"    
+    "kubernetes.io/role/cni"          = "1"
   }
 }
 
@@ -84,7 +84,7 @@ resource "aws_route_table" "public" {
   }
   tags = {
     Name = "simple-golang-api-route-table-public"
-  }  
+  }
 }
 
 resource "aws_route_table_association" "public" {
@@ -101,7 +101,7 @@ resource "aws_route_table" "private" {
   }
   tags = {
     Name = "simple-golang-api-route-table-private"
-  }  
+  }
 }
 
 resource "aws_route_table_association" "private" {
@@ -112,7 +112,7 @@ resource "aws_route_table_association" "private" {
 
 data "aws_iam_policy_document" "eks_assume_role_policy" {
   statement {
-    effect = "Allow"
+    effect  = "Allow"
     actions = ["sts:AssumeRole", "sts:TagSession"]
     principals {
       type        = "Service"
@@ -139,7 +139,7 @@ resource "aws_iam_role_policy_attachments_exclusive" "cluster" {
 
 data "aws_iam_policy_document" "eks_node_assume_role_policy" {
   statement {
-    effect = "Allow"
+    effect  = "Allow"
     actions = ["sts:AssumeRole"]
     principals {
       type        = "Service"
@@ -156,7 +156,7 @@ resource "aws_iam_role" "eks_node" {
 resource "aws_iam_role_policy_attachments_exclusive" "node" {
   role_name = aws_iam_role.eks_node.name
   policy_arns = [
-   "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly",
+    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly",
     "arn:aws:iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy"
   ]
 }
@@ -203,11 +203,11 @@ resource "aws_eks_cluster" "eks" {
       enabled = "true"
     }
   }
- 
+
   upgrade_policy {
     support_type = "STANDARD"
   }
-    
- depends_on = [aws_iam_role.eks_cluster]
+
+  depends_on = [aws_iam_role.eks_cluster]
 
 }
