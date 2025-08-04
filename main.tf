@@ -122,7 +122,7 @@ data "aws_iam_policy_document" "eks_assume_role_policy" {
 }
 
 resource "aws_iam_role" "eks_cluster" {
-  name               = "eks-cluster-role"
+  name               = "AmazonEKSAutoClusterRole"
   assume_role_policy = data.aws_iam_policy_document.eks_assume_role_policy.json
 }
 
@@ -149,7 +149,7 @@ data "aws_iam_policy_document" "eks_node_assume_role_policy" {
 }
 
 resource "aws_iam_role" "eks_node" {
-  name               = "eks-node-role"
+  name               = "AmazonEKSAutoNodeRole"
   assume_role_policy = data.aws_iam_policy_document.eks_node_assume_role_policy.json
 }
 
