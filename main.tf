@@ -40,7 +40,7 @@ resource "aws_nat_gateway" "natgw" {
   depends_on    = [aws_internet_gateway.igw]
   tags = {
     Name = "simple-golang-api-natgw-${count.index}"
-  }  
+  }
 }
 
 resource "aws_eip" "natgw" {
