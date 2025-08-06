@@ -34,7 +34,7 @@ resource "aws_internet_gateway" "igw" {
 }
 
 resource "aws_nat_gateway" "natgw" {
-  count         = length(aws_subnet.public[*].id)
+  count         = length(var.availability_zones)
   allocation_id = aws_eip.natgw[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
   depends_on    = [aws_internet_gateway.igw]
@@ -44,8 +44,9 @@ resource "aws_nat_gateway" "natgw" {
 }
 
 resource "aws_eip" "natgw" {
+  count = length(var.availability_zones)
   tags = {
-    Name = "simple-golang-api-eip-natgw"
+    Name = "simple-golang-api-eip-natgw-${count.index}"
   }
 }
 
@@ -95,20 +96,23 @@ resource "aws_route_table_association" "public" {
 }
 
 resource "aws_route_table" "private" {
+  count  = length(var.availability_zones)
   vpc_id = aws_vpc.eks_vpc.id
+
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.natgw.id
+    nat_gateway_id = aws_nat_gateway.natgw[count.index].id
   }
+
   tags = {
-    Name = "simple-golang-api-route-table-private"
+    Name = "simple-golang-api-route-table-private-${count.index}"
   }
 }
 
 resource "aws_route_table_association" "private" {
-  count          = 2
+  count          = length(var.availability_zones)
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private.id
+  route_table_id = aws_route_table.private[count.index].id
 }
 
 data "aws_iam_policy_document" "eks_assume_role_policy" {
