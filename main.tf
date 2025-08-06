@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 terraform {
-  required_version = ">= 1.12.0"
+  required_version = ">= 1.6.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -17,7 +17,7 @@ locals {
 }
 
 resource "aws_vpc" "eks_vpc" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = var.vpc_cidr
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
@@ -34,12 +34,13 @@ resource "aws_internet_gateway" "igw" {
 }
 
 resource "aws_nat_gateway" "natgw" {
-  allocation_id = aws_eip.natgw.id
-  subnet_id     = aws_subnet.public[0].id
+  count         = length(aws_subnet.public[*].id)
+  allocation_id = aws_eip.natgw[count.index].id
+  subnet_id     = aws_subnet.public[count.index].id
   depends_on    = [aws_internet_gateway.igw]
   tags = {
-    Name = "simple-golang-api-natgw"
-  }
+    Name = "simple-golang-api-natgw-${count.index}"
+  }  
 }
 
 resource "aws_eip" "natgw" {
